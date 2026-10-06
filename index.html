@@ -158,11 +158,14 @@
       display: none;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       background: rgba(14, 24, 34, .9);
       text-align: center;
       padding: 16px;
-      z-index: 4
+      z-index: 4;
+      overflow-y: auto;
+      padding-top: 40px;
+      padding-bottom: 40px;
     }
 
     #shop {
@@ -215,13 +218,13 @@
   .sw{display:inline-block;width:26px;height:26px;border-radius:50%;border:2px solid #fff3;margin:3px;cursor:pointer;vertical-align:middle}.sw.on{border-color:#fff}
 .tb{display:flex;gap:8px;margin:6px 0}.tb span{padding:6px 14px;border:1px solid #f4ead8;border-radius:20px;cursor:pointer;opacity:.6}.tb span.on{opacity:1;background:#fff2}
 #as{font-size:12px;color:#ffb347}#pv{margin:6px 0}
-.cb{width:40px;height:40px;border-radius:50%;border:1px solid rgba(244,234,216,.5);background:rgba(20,30,40,.22);color:#fff;font-size:16px;opacity:var(--co,.45);cursor:pointer;padding:0;transition:opacity .15s}
+.cb{width:60px;height:60px;border-radius:50%;border:1px solid rgba(244,234,216,.5);background:rgba(20,30,40,.22);color:#fff;font-size:24px;opacity:var(--co,.45);cursor:pointer;padding:0;transition:opacity .15s}
 .cb:hover{opacity:.8}.cb:active,.cb.on{opacity:1;background:rgba(255,255,255,.28)}
 #top{position:fixed;top:46px;right:14px;display:flex;gap:8px}
-#pad{position:fixed;left:14px;bottom:92px;display:flex;gap:10px}
-#pad2{position:fixed;right:14px;bottom:14px;display:flex;gap:8px}
+#pad{position:fixed;left:14px;bottom:92px;display:flex;gap:40px}
+#pad2{position:fixed;right:14px;bottom:92px;display:flex;gap:8px}
 .nocb #pad,.nocb #pad2{display:none}
-#set{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(14,24,34,.92);text-align:center;padding:16px;z-index:6}
+#set{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:flex-start;background:rgba(14,24,34,.92);text-align:center;padding:16px;z-index:6;overflow-y:auto;padding-top:40px;padding-bottom:40px}
 #set h2{font-weight:300;letter-spacing:.14em;margin:0 0 10px}
 .sr{display:flex;justify-content:space-between;align-items:center;gap:14px;width:min(92vw,380px);margin:7px 0;font-size:15px}
 .tg{padding:4px 11px;border:1px solid #f4ead8;border-radius:14px;cursor:pointer;opacity:.6;font-weight:400}.tg.on{opacity:1;background:#fff2}
@@ -255,6 +258,7 @@
   <div id="zn"></div>
   <div id="lv"></div>
   <div id="msg"></div>
+  <div id="alertMsg" style="position:fixed;top:32%;left:0;width:100%;text-align:center;font-size:clamp(22px, 6vw, 40px);font-weight:600;letter-spacing:.1em;pointer-events:none;display:none;text-shadow:0 2px 10px #000;z-index:3;"></div>
   <div id="nb"><i id="nf"></i></div>
   <div id="top"><button id="bcu" class="cb">🔼</button><button id="bcd" class="cb">🔽</button><button id="bc" class="cb">🎥</button><button id="bset" class="cb">⚙️</button><button id="bs" class="cb">🔧</button><button id="bp" class="cb">⏸</button><button id="bm" class="cb">🔊</button></div>
   <div id="pad"><button id="bl" class="cb">◀</button><button id="brt" class="cb">▶</button></div>
@@ -278,8 +282,8 @@
     <p>H = horn (peeche wali gaadi ko hatao) · Garage → My Car me color/style badlo</p><p id="as"></p><p class="go">Press any key or tap to drive</p>
   </div>
   <script>
-    const SET = { mv: .7, sv: .9, co: .45, cb: 1, q: 1.5, cm: 0, ca: 0 };
-    try { Object.assign(SET, JSON.parse(localStorage.getItem('er4s') || '{}')) } catch (e) { }
+    const SET = { mv: .7, sv: .9, co: .45, cb: 1, q: 1.5, cm: 0, ca: 0, ms: 1 };
+    try { Object.assign(SET, JSON.parse(localStorage.getItem('er4s') || '{}')); if(SET.ms === undefined) SET.ms = 1; } catch (e) { }
     window.addEventListener('error', e => { const a = document.getElementById('as'); if (a) a.textContent = '⚠ Error: ' + e.message });
     const cv = document.getElementById('c'); let g = cv.getContext('2d'); const g0 = g;
     let W, H, HZ;
@@ -321,7 +325,7 @@
     const trainX = k => { const p = trainPh(k); if (p < 4 || p > 7) return null; const t = (p - 4) / 3 * 12 - 6; return hash(k + 2) > .5 ? t : -t };
     const treeX = k => { if (pondSide(k) || crossK(k)) return null; const z = zoneOf(k), h = hash(k); if (!((z === 0 && h > .7) || (z === 1 && h > .68))) return null; return (h > .85 ? 1 : -1) * (1.35 + hash(k + .5) * 2) };
     // ================= ASSETS (src folder) =================
-    const SRC = 'src/', miss = [];
+    const SRC = 'https://shivtool.github.io/EndlessRoad/src/', miss = [];
     const ld = { t: 0, d: 0 }, fin = () => ld.d++;
     const loadImg = n => { const i = new Image(); i.ok = false; ld.t++; i.onload = () => { i.ok = true; fin() }; i.onerror = () => { miss.push(n); fin() }; i.src = SRC + n; return i };
     const six = [1, 2, 3, 4, 5, 6];
@@ -337,7 +341,7 @@
     A.bgmusic.loop = A.carsound.loop = true; A.bgmusic.volume = .35;
     try { A.carsound.preservesPitch = A.carsound.mozPreservesPitch = A.carsound.webkitPreservesPitch = false } catch (e) { }
     const pl = (n, v) => { const a = A[n]; if (a.ok === false) return false; try { a.volume = Math.min(1, (v == null ? 1 : v) * SET.sv); a.currentTime = 0; a.play().catch(() => { }) } catch (e) { } return true };
-    setTimeout(() => { const m = miss.filter(n => !(n.startsWith('treesmal') && TS.some(i => i.ok))); $('as').textContent = m.length ? '⚠ src folder me ye file nahi mili: ' + m.join(', ') : '' }, 1800);
+    // setTimeout(() => { const m = miss.filter(n => !(n.startsWith('treesmal') && TS.some(i => i.ok))); $('as').textContent = m.length ? '⚠ src folder me ye file nahi mili: ' + m.join(', ') : '' }, 1800);
     function horn() { if (!pl('horn', .9)) snd(330, .4, 'square', .1); for (const c of cars) if (c.z > pos + PZ && c.z < pos + PZ + SEG * 40 && Math.abs(c.x - px) < .3) c.tx = -Math.sign(c.x) * .5 }
     // ================= SETTINGS / CONTROLS / SPLASH =================
     let setOpen = false;
@@ -346,7 +350,7 @@
     applySet();
     const rng = (k, l, mn, mx, st) => '<div class="sr"><span>' + l + '</span><input type="range" data-s="' + k + '" min="' + mn + '" max="' + mx + '" step="' + st + '" value="' + SET[k] + '"></div>';
     function renderSet() {
-      $('set').innerHTML = '<h2>SETTINGS</h2>' + rng('mv', '🎵 Music', 0, 1, .05) + rng('sv', '🔊 Sound effects', 0, 1, .05) + rng('co', '🎮 Button opacity', .15, .9, .05)
+      $('set').innerHTML = '<h2>SETTINGS</h2>' + rng('mv', '🎵 Music', 0, 1, .05) + rng('sv', '🔊 Sound effects', 0, 1, .05) + rng('co', '🎮 Button opacity', .15, .9, .05) + rng('ms', '🏎️ Max Speed', .3, 1, .05)
         + '<div class="sr"><span>On-screen buttons</span><b class="tg on" data-t="cb">' + (SET.cb ? 'ON' : 'OFF') + '</b></div>'
         + '<div class="sr"><span>Graphics</span><span>' + [['Low', 1], ['Medium', 1.5], ['High', 2]].map(([n, v]) => '<b class="tg' + (SET.q === v ? ' on' : '') + '" data-q="' + v + '">' + n + '</b>').join(' ') + '</span></div>'
         + '<div class="sr"><span>Camera</span><span>' + ['1', '2', '3'].map((n, i) => '<b class="tg' + (SET.cm === i ? ' on' : '') + '" data-cm="' + i + '">' + n + '</b>').join(' ') + '</span></div>' + '<p class="bt" id="rst">Reset saved data</p><p class="bt" id="sc">Close</p>';
@@ -541,7 +545,8 @@
     // traffic
     const cars = [], CC = ['#c9503f', '#e0b84a', '#3f7fb0', '#d9d2c3', '#5c8f6b', '#2b2f36', '#7a5aa0', '#e07a2f'];
     function traffic(dt) {
-      while (cars.length < 7) cars.push({ z: pos + PZ + SEG * (30 + Math.random() * 95), x: Math.random() < .5 ? -.5 : .5, v: MAX * (.2 + Math.random() * .25), c: CC[Math.random() * 8 | 0], t: pickT() });
+      const maxCars = Math.max(1, 7 - Math.floor((speed / MAX) * 7));
+      while (cars.length < maxCars) cars.push({ z: pos + PZ + SEG * (30 + Math.random() * 95), x: Math.random() < .5 ? -.5 : .5, v: MAX * (.2 + Math.random() * .25), c: CC[Math.random() * 8 | 0], t: pickT() });
       for (const c of cars) {
         c.z += c.v * dt; if (c.tx !== undefined) c.x += (c.tx - c.x) * Math.min(1, dt * 2);
         if (Math.abs(c.z - (pos + PZ)) < 70 && Math.abs(c.x - px) < (c.t === 'truck' || c.t === 'bus' ? .14 : .1)) hit('crash', 'GAADI SE TAKKAR!')
@@ -565,7 +570,8 @@
       nit = wn ? Math.max(0, nit - dt * .3) : Math.min(1, nit + dt * .05 * (1 + UP.nit * .4));
       const top = MAX * 1.25 * (CAR.style === 'sports' ? 1.06 : 1) * (1 + UP.eng * .08) * (wn ? 1.3 : 1);
       const target = (!live || down) ? 0 : ((up || wn) ? top : MAX * .75 * (1 + UP.eng * .04));
-      speed += (target - speed) * Math.min(1, dt * (!live ? 3 : down ? 1.8 : .5));
+      const finalTarget = target * SET.ms;
+      speed += (finalTarget - speed) * Math.min(1, dt * (!live ? 3 : down ? 1.8 : .5));
       const sp = speed / MAX, k = Math.floor(pos / SEG), c = curve(k), steer = (r ? 1 : 0) - (l ? 1 : 0);
       px += steer * dt * 2.6 * sp * (1 - rain * .15 * (1 - UP.tire * .15)) * (1 + UP.tire * .1);
       px -= c * dt * sp * sp;
@@ -608,6 +614,23 @@
       $('zn').textContent = Z[curZ].n;
       $('lv').innerHTML = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, maxLives() - lives)) + '<br>🪙 ' + coins + ' &nbsp;⭐ ' + score();
       $('nf').style.width = nit * 100 + '%';
+
+      let alertMsg = '';
+      if (live && speed > 500) {
+        for (let d = 0; d < 28; d++) {
+          const q = nk + d;
+          if (crossK(q)) {
+            if (trainPh(q) < 7.8) alertMsg = '⚠️ TRAIN AHEAD! BRAKE!';
+            break;
+          }
+        }
+      }
+      const am = $('alertMsg');
+      if (alertMsg) {
+        if (am.textContent !== alertMsg) am.textContent = alertMsg;
+        am.style.display = 'block';
+        am.style.color = Math.floor(T * 8) % 2 === 0 ? '#ff3b30' : '#fff';
+      } else am.style.display = 'none';
     }
 
     function poly(x1, y1, w1, x2, y2, w2, col) {
