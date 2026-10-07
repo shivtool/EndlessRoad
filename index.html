@@ -249,6 +249,36 @@
 @keyframes shine{to{background-position:-250% 0}}@keyframes pulse{50%{transform:scale(1.08);opacity:1}}
 #brand{position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.3em;opacity:.45;pointer-events:none}
 #bcu,#bcd{display:none}.cm2 #bcu,.cm2 #bcd{display:inline-block}
+#shop{background:radial-gradient(120% 80% at 50% 0,#1d3550 0,#0c1622 70%);padding-top:18px}
+.gw{width:min(94vw,540px);display:flex;flex-direction:column;align-items:center;padding-bottom:90px}
+.gh{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:10px}
+.gh h2{margin:0!important;font-size:22px}
+.chips{display:flex;gap:8px}.chip{padding:6px 12px;border-radius:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);font-weight:600}
+#shop .tb{width:100%;box-sizing:border-box;gap:6px;margin:0 0 14px;background:rgba(255,255,255,.07);padding:5px;border-radius:30px;position:sticky;top:0;z-index:2;backdrop-filter:blur(8px)}
+#shop .tb span{flex:1;padding:9px 6px;border:0;border-radius:24px;opacity:.65;font-size:14px;transition:.2s}
+#shop .tb span.on{opacity:1;background:linear-gradient(135deg,#ffb347,#ff6a3a);color:#1a1208;font-weight:700}
+#pv{display:block;width:100%;max-width:380px;height:auto;aspect-ratio:2/1;border-radius:18px;border:1px solid rgba(255,255,255,.2);box-shadow:0 10px 30px rgba(0,0,0,.45);margin:0 auto 6px}
+.sec{width:100%;text-align:left;font-size:13px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;margin:16px 0 8px!important}
+.gr{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;width:100%}
+.gr .up{width:auto;margin:0;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;text-align:center;padding:12px 8px;border-radius:16px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));transition:transform .15s,border-color .2s}
+.gr .up:hover{transform:translateY(-3px);border-color:#ffb347}
+.gr .up.sel{border-color:#ffb347;box-shadow:0 0 0 2px rgba(255,179,71,.35),0 0 18px rgba(255,179,71,.25)}
+.up .ic{font-size:34px;line-height:1.1;min-height:40px;width:100%;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.up .ic img{height:46px;max-width:100%;object-fit:contain}
+.up .nm,.up small,.up .pp{pointer-events:none}
+.up .nm{font-size:14px}.up small{opacity:.7;font-size:11px;min-height:14px}
+.up .pr{margin-top:4px;padding:4px 12px;border-radius:14px;background:rgba(255,179,71,.18);border:1px solid rgba(255,179,71,.5);font-size:13px;font-weight:700;pointer-events:none}
+.up.sel .pr{background:#ffb347;color:#1a1208}
+.up .pp{color:#ffb347;letter-spacing:2px;font-size:12px}
+.th{display:block;width:100%;height:46px;border-radius:10px}
+.sws{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.sws .sw{width:34px;height:34px;margin:0;box-sizing:border-box;border:2px solid rgba(255,255,255,.35);display:inline-flex;align-items:center;justify-content:center;transition:transform .15s}
+.sws .sw:hover{transform:scale(1.15)}
+.sw.on{border-color:#fff!important;box-shadow:0 0 0 3px #ffb347}
+.sw.lk{opacity:.5}.sw.lk::after{content:'🔒';font-size:13px}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:14px 12px;display:flex;justify-content:center;background:linear-gradient(transparent,rgba(8,14,22,.96) 45%);z-index:7}
+.bar .bt{margin:0!important;padding:12px 44px;background:linear-gradient(135deg,#ffb347,#ff6a3a);color:#1a1208;font-weight:700;border:0}
+.gn{font-size:11px;opacity:.6;width:100%;text-align:left;margin-top:6px}
 </style>
 </head>
 
@@ -306,15 +336,41 @@
     let skyCur = Z[0].sky.map(h2r);
 
     let pos = 0, speed = 0, px = 0, bg = 0, started = false, muted = false, steerVis = 0, T = 0, bump = 0, rain = 0, rainOverride = null, curZ = 0;
-    const keys = {}; let tl = false, tr = false, tb = false;
+    let pvx = 0; const keys = {}; let tl = false, tr = false, tb = false;
     // ---- game state: lives, coins, upgrades, crashes ----
     const $ = id => document.getElementById(id);
-    let coins = 0, best = 0, lives = 4, runC = 0, state = 'play', stT = 0, inv = 0, nit = 1, nitOn = false, nTap = false, paused = false, shopOpen = false;
-    const UP = { eng: 0, tire: 0, nit: 0, hp: 0 }, coinsA = [], CAR = { style: 'sedan', color: '#e0463c', own: ['sedan'] };
+    let dia = 0, coins = 0, best = 0, lives = 4, runC = 0, state = 'play', stT = 0, inv = 0, nit = 1, nitOn = false, nTap = false, paused = false, shopOpen = false;
+    const UP = { eng: 0, tire: 0, nit: 0, hp: 0 }, coinsA = [], CAR = { style: 'sedan', color: '#e0463c', own: ['sedan'], img: -1, wc: '', sc: '', own2: [], imgOwn: [], th: ['classic'], theme: 'classic' };
     const UI = [['eng', '⚙️ Engine', 'Top speed +8%', 40, 5], ['tire', '🛞 Tyres', 'Better steering and rain grip', 30, 5], ['nit', '⚡ Nitro', 'Faster recharge', 35, 5], ['hp', '❤️ Armor', '+1 chance (life)', 60, 2]];
-    try { const sv = JSON.parse(localStorage.getItem('er3') || '{}'); coins = sv.c || 0; best = sv.b || 0; Object.assign(UP, sv.u || {}); Object.assign(CAR, sv.car || {}) } catch (e) { }
-    const save = () => { if (window.noSave) return; try { localStorage.setItem('er3', JSON.stringify({ c: coins, b: best, u: UP, car: CAR })) } catch (e) { } };
+    try { const sv = JSON.parse(localStorage.getItem('er3') || '{}'); coins = sv.c || 0; dia = sv.d || 0; best = sv.b || 0; Object.assign(UP, sv.u || {}); Object.assign(CAR, sv.car || {}) } catch (e) { }
+    const save = () => { if (window.noSave) return; try { localStorage.setItem('er3', JSON.stringify({ c: coins, d: dia, b: best, u: UP, car: CAR })) } catch (e) { } };
     addEventListener('pagehide', save); setInterval(save, 10000);
+    // ---- themes / diamonds / prizes ----
+    const TH = {
+      classic: { n: '🌲 Classic', s: 'Original 5 zones', c: 0, d: 0 },
+      desert: { n: '🏜️ Desert', s: 'Golden sand, warm sky', c: 300, d: 0, p: { sky: ['#3a2a5a', '#e0a070', '#ffd9a0'], gA: '#d2a85c', gB: '#c79c52', rA: '#6b5a4a', rB: '#705e4d' } },
+      autumn: { n: '🍂 Autumn', s: 'Orange fall colours', c: 400, d: 0, p: { sky: ['#4a3a4a', '#c88a60', '#f5d09a'], gA: '#a0652a', gB: '#965c24', rA: '#4a4540', rB: '#4f4a44' } },
+      snow: { n: '❄️ Snow', s: 'White winter world', c: 500, d: 0, p: { sky: ['#4a6a88', '#b8d0e0', '#f2f6fa'], gA: '#e8eef2', gB: '#dde6ec', rA: '#5a626a', rB: '#60686f' } },
+      neon: { n: '🌃 Neon Night', s: 'Premium purple-pink glow', c: 0, d: 5, p: { sky: ['#0a0220', '#2a0a50', '#ff2d95'], gA: '#1a0f2e', gB: '#150a26', rA: '#1c1a2a', rB: '#201e30' } }
+    };
+    let ZA = Z;
+    function setTheme(id) { const t = TH[id]; ZA = Z.map((z, i) => t && t.p && i !== 4 ? Object.assign({}, z, t.p) : z) }
+    setTheme(CAR.theme);
+    const IMGP = [[150, 0], [200, 0], [250, 0], [300, 0], [350, 0], [0, 5], [0, 8], [0, 12], [0, 15], [0, 25]];
+    const mp = i => i < 2 ? [0, 0] : i < 7 ? [25, 0] : [0, 2];
+    const WCOL = ['#0e1012', '#c9ced3', '#ffd24a', '#e0463c', '#2f9bff', '#3ee08a', '#ff7a1a', '#ff4fd8'];
+    const SCOL = ['', '#ffffff', '#111111', '#ffd24a', '#e0463c', '#2f9bff', '#3ee08a', '#ff7a1a'];
+    const diaGot = new Set(); let mil = 0;
+    const diaAt = k => { const r = k % ZL; return (r === 420 || r === 1010) && !diaGot.has(k) ? (hash(k + 8) - .5) * 1.5 : null };
+    function prize() {
+      const r = Math.random();
+      if (r < .4) { coins += 40; toast('💎 +1 · Prize: +40 🪙', 1600) }
+      else if (r < .6) { lives = Math.min(maxLives(), lives + 1); toast('💎 +1 · Prize: +1 ❤️', 1600) }
+      else if (r < .75) { nit = 1; toast('💎 +1 · Prize: Full ⚡', 1600) }
+      else toast('💎 +1 Diamond!', 1200);
+      save();
+    }
+    function daily() { try { const d = new Date().toDateString(); if (localStorage.getItem('erd') !== d) { localStorage.setItem('erd', d); coins += 30; dia += 1; save(); setTimeout(() => toast('🎁 Daily bonus: +30 🪙 +1 💎', 2500), 600) } } catch (e) { } }
     const maxLives = () => 4 + UP.hp, score = () => Math.floor(pos / 100) + runC * 25;
     lives = maxLives();
     const clouds = Array.from({ length: 6 }, (_, i) => ({ x: i / 6, y: .1 + Math.random() * .3, s: .6 + Math.random() * .9 }));
@@ -331,6 +387,7 @@
     const six = [1, 2, 3, 4, 5, 6];
     const TR = six.map(i => loadImg('tree' + i + '.png')), HO = six.map(i => loadImg('house' + i + '.png'));
     const TS = six.map(i => loadImg('treesmal' + i + '.png')).concat([loadImg('treesmal.png')]);
+    const CI = Array.from({ length: 10 }, (_, i) => loadImg('car' + (i + 1) + '.png'));
     const pick = (a, h) => { const l = a.filter(i => i.ok && i.naturalWidth); return l.length ? l[Math.floor(h * 97) % l.length] : null };
     function spr(im, x, y, hh, fl, al) {
       if (hh < 3) return; const w = hh * im.naturalWidth / im.naturalHeight;
@@ -426,6 +483,7 @@
       const bh = big ? w * (t === 'bus' ? .95 : .8) : w * s[0], yb = y - gr, yt = yb - bh;
       g.fillStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.ellipse(sx, y, w * .6, w * .07, 0, 0, 7); g.fill();
       g.fillStyle = '#0e1012'; g.fillRect(sx - L, y - w * .2, w * .15, w * .2); g.fillRect(sx + L - w * .15, y - w * .2, w * .15, w * .2);
+      if (o.wheel) { g.fillStyle = o.wheel; g.fillRect(sx - L + w * .04, y - w * .15, w * .07, w * .1); g.fillRect(sx + L - w * .11, y - w * .15, w * .07, w * .1) }
       if (big) {
         const gd = g.createLinearGradient(0, yt, 0, yb); gd.addColorStop(0, shade(col, 1.2)); gd.addColorStop(1, shade(col, .65)); g.fillStyle = gd; g.fillRect(sx - L, yt, w, bh);
         if (t === 'bus') { g.fillStyle = '#1d2a33'; g.fillRect(sx - L * .85, yt + bh * .06, w * .85, bh * .36) } else { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(sx - .5, yt, 1, bh); g.fillRect(sx - L, yt + bh * .5, w, 1) }
@@ -433,6 +491,7 @@
         const ch = w * s[1], x0 = t === 'sports' ? L * 1.04 : L, gd = g.createLinearGradient(0, yt - ch, 0, yb);
         gd.addColorStop(0, shade(col, 1.25)); gd.addColorStop(.5, col); gd.addColorStop(1, shade(col, .6)); g.fillStyle = gd;
         g.beginPath(); g.moveTo(sx - x0, yb); g.lineTo(sx - x0 * .96, yt); g.lineTo(sx - w * s[2] / 2, yt); g.lineTo(sx - w * s[3] / 2, yt - ch); g.lineTo(sx + w * s[3] / 2, yt - ch); g.lineTo(sx + w * s[2] / 2, yt); g.lineTo(sx + x0 * .96, yt); g.lineTo(sx + x0, yb); g.closePath(); g.fill();
+        if (o.stripe) { g.fillStyle = o.stripe; g.fillRect(sx - w * .11, yt - ch * .98, w * .07, ch * .98 + bh); g.fillRect(sx + w * .04, yt - ch * .98, w * .07, ch * .98 + bh) }
         g.fillStyle = '#1b2a33'; g.beginPath(); g.moveTo(sx - w * s[2] * .45, yt - ch * .06); g.lineTo(sx - w * s[3] * .44, yt - ch * .92); g.lineTo(sx + w * s[3] * .44, yt - ch * .92); g.lineTo(sx + w * s[2] * .45, yt - ch * .06); g.closePath(); g.fill();
         g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(sx - w * s[3] * .4, yt - ch * .9, w * s[3] * .28, ch * .22);
         if (t === 'sports') { g.fillStyle = shade(col, .45); g.fillRect(sx - x0 * .9, yt - w * .05, x0 * 1.8, w * .035); g.fillRect(sx - x0 * .55, yt - w * .02, w * .03, w * .03); g.fillRect(sx + x0 * .55, yt - w * .02, w * .03, w * .03) }
@@ -445,6 +504,12 @@
       g.fillStyle = '#14161a'; g.fillRect(sx - L, yb - bh * .12, w, bh * .12);
       if (t === 'sports' || t === 'suv') { g.fillStyle = '#9a9ea4'; g.fillRect(sx - L * .55, yb - bh * .07, w * .08, bh * .06); g.fillRect(sx + L * .55 - w * .08, yb - bh * .07, w * .08, bh * .06) }
     }
+    function pcar(x, y, w, o) {
+      o = o || {}; o.stripe = CAR.sc; o.wheel = CAR.wc;
+      const im = CAR.img >= 0 && CI[CAR.img];
+      if (im && im.ok && im.naturalWidth) { const ww = w * 1.1, h = ww * im.naturalHeight / im.naturalWidth; g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(x, y, ww * .5, h * .06, 0, 0, 7); g.fill(); g.drawImage(im, x - ww / 2, y - h, ww, h) }
+      else car(x, y, w, CAR.color, CAR.style, o);
+    }
     function toast(t, ms = 1300) { const m = $('msg'); m.textContent = t; m.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => m.style.opacity = 0, ms) }
     function snd(f, d, ty, v) { if (!ac || muted) return; try { const o = ac.createOscillator(), q = ac.createGain(); o.type = ty || 'square'; o.frequency.value = f; q.gain.setValueAtTime(v || .07, ac.currentTime); q.gain.exponentialRampToValueAtTime(.001, ac.currentTime + d); o.connect(q); q.connect(ac.destination); o.start(); o.stop(ac.currentTime + d) } catch (e) { } }
     function hit(kind, msg) {
@@ -453,27 +518,44 @@
       toast(msg + (lives > 0 ? '' : ' - GAME OVER'), 1800);
       if (!pl(kind === 'drown' ? 'water' : 'crash')) snd(kind === 'drown' ? 160 : 70, .7, 'sawtooth', .15);
     }
-    function respawn() { state = 'play'; px = 0; speed = MAX * .35; inv = 3; pos += SEG * 4; cars.length = 0; stT = 0 }
+    function respawn() { state = 'play'; px = 0; pvx = 0; speed = MAX * .35; inv = 3; pos += SEG * 4; cars.length = 0; stT = 0 }
     function endGame() {
       state = 'over'; const s = score(); if (s > best) best = s; save();
       $('over').innerHTML = '<h1>Try Again..</h1><p>Score ' + s + '</p><p>Best ' + best + ' &nbsp;·&nbsp; 🪙 ' + coins + '</p><p class="bt" id="rs">Drive again</p><p class="bt" id="gg">🔧 Garage</p>';
       $('over').style.display = 'flex';
     }
-    function restart() { $('over').style.display = 'none'; lives = maxLives(); pos = 0; px = 0; speed = 0; state = 'play'; inv = 3; runC = 0; nit = 1; cars.length = 0; coinsA.length = 0 }
+    function restart() { $('over').style.display = 'none'; lives = maxLives(); pos = 0; px = 0; speed = 0; state = 'play'; inv = 3; runC = 0; nit = 1; cars.length = 0; coinsA.length = 0; diaGot.clear(); mil = 0 }
     function openShop(v) { shopOpen = v; $('shop').style.display = v ? 'flex' : 'none'; if (v) renderShop() }
     let tab = 0;
     const COLS = ['#e0463c', '#e8801a', '#e0b84a', '#3a8f5c', '#1f8a8a', '#2f6fb5', '#1f3a6e', '#7a4a9a', '#ecebe6', '#aab0b5', '#1c1f24'];
     const STP = { sedan: [0, 'Balanced'], hatch: [60, 'City hatchback'], suv: [120, 'Tall SUV'], sports: [250, 'Top speed +6%'] };
-    function drawPv() { const c = $('pv'); if (!c) return; g = c.getContext('2d'); g.clearRect(0, 0, 260, 130); car(130, 118, 150, CAR.color, CAR.style, { night: 0 }); g = g0 }
+    function drawPv() { const c = $('pv'); if (!c) return; g = c.getContext('2d'); { const sk = ZA[0].sky, gd = g.createLinearGradient(0, 0, 0, 100); gd.addColorStop(0, sk[0]); gd.addColorStop(.6, sk[1]); gd.addColorStop(1, sk[2]); g.fillStyle = gd; g.fillRect(0, 0, 260, 130); g.fillStyle = ZA[0].gA; g.fillRect(0, 96, 260, 34); g.fillStyle = '#2a2d33'; g.fillRect(30, 96, 200, 34); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(127, 100, 6, 26) } pcar(130, 118, 150, { night: 0 }); g = g0 }
     function renderShop() {
-      let h = '<h2>GARAGE</h2><p>🪙 ' + coins + '</p><div class="tb"><span data-tab="0" class="' + (tab ? '' : 'on') + '">Upgrades</span><span data-tab="1" class="' + (tab ? 'on' : '') + '">My Car</span></div>';
-      if (!tab) { for (const [k, n, d, b, m] of UI) { const lv = UP[k], pr = b * (lv + 1); h += '<div class="up' + (lv < m && coins >= pr ? '' : ' no') + '" data-k="' + k + '"><span>' + n + ' · Lv ' + lv + '/' + m + '<br><small>' + d + '</small></span><b>' + (lv >= m ? 'MAX' : '🪙 ' + pr) + '</b></div>' } }
-      else {
-        h += '<canvas id="pv" width="260" height="130"></canvas>';
-        for (const k in STP) h += '<div class="up' + (CAR.own.includes(k) || coins >= STP[k][0] ? '' : ' no') + '" data-st="' + k + '"><span>' + k.toUpperCase() + '<br><small>' + STP[k][1] + '</small></span><b>' + (CAR.own.includes(k) ? (CAR.style === k ? '✔' : 'USE') : '🪙 ' + STP[k][0]) + '</b></div>';
-        h += '<div>'; COLS.forEach(c => h += '<i class="sw' + (CAR.color === c ? ' on' : '') + '" data-col="' + c + '" style="background:' + c + '"></i>'); h += '<input type="color" id="cc" value="' + CAR.color + '"></div>';
+      const cl = x => ((x[0] ? '🪙 ' + x[0] : '') + (x[1] ? ' 💎 ' + x[1] : '')) || 'FREE', af = x => coins >= x[0] && dia >= x[1];
+      const card = (at, ic, nm, sb, own, sel, cost) => '<div class="up' + (sel ? ' sel' : '') + (!own && !af(cost) ? ' no' : '') + '" ' + at + '><div class="ic">' + ic + '</div><b class="nm">' + nm + '</b><small>' + sb + '</small><span class="pr">' + (sel ? '✔ In use' : own ? 'USE' : cl(cost)) + '</span></div>';
+      let h = '<div class="gw"><div class="gh"><h2>🔧 GARAGE</h2><div class="chips"><span class="chip">🪙 ' + coins + '</span><span class="chip">💎 ' + dia + '</span></div></div><div class="tb">' + ['⚙️ Upgrades', '🚗 My Car', '🎨 Themes'].map((n, i) => '<span data-tab="' + i + '" class="' + (tab === i ? 'on' : '') + '">' + n + '</span>').join('') + '</div>';
+      if (tab === 0) {
+        h += '<div class="gr">';
+        for (const [k, n, d, b, m] of UI) { const lv = UP[k], pr = b * (lv + 1), mx = lv >= m, p = n.split(' ');
+          h += '<div class="up' + (mx ? ' sel' : !af([pr, 0]) ? ' no' : '') + '" data-k="' + k + '"><div class="ic">' + p[0] + '</div><b class="nm">' + p.slice(1).join(' ') + '</b><small>' + d + '</small><span class="pp">' + '●'.repeat(lv) + '○'.repeat(m - lv) + '</span><span class="pr">' + (mx ? '✔ MAX' : '🪙 ' + pr) + '</span></div>' }
+        h += '<div class="up' + (coins >= 400 ? '' : ' no') + '" data-cv="1"><div class="ic">💎</div><b class="nm">Convert</b><small>400 coins = 1 diamond</small><span class="pr">🪙 400</span></div></div>';
+      } else if (tab === 1) {
+        h += '<canvas id="pv" width="260" height="130"></canvas><div class="sec">Built-in styles</div><div class="gr">';
+        const SI = { sedan: '🚘', hatch: '🚗', suv: '🚙', sports: '🏎️' };
+        for (const k in STP) h += card('data-st="' + k + '"', SI[k], k.toUpperCase(), STP[k][1], CAR.own.includes(k), CAR.style === k && CAR.img < 0, [STP[k][0], 0]);
+        h += '</div><div class="sec">Image cars</div><div class="gr">';
+        IMGP.forEach((p, i) => { h += card('data-im="' + i + '"', CI[i].ok ? '<img src="' + CI[i].src + '">' : '🚗', 'CAR ' + (i + 1), p[1] ? 'Premium' : 'Classic', CAR.imgOwn.includes(i), CAR.img === i, p) });
+        h += '</div>';
+        const row = (t, arr, cur, lbl) => { h += '<div class="sec">' + lbl + '</div><div class="sws">'; arr.forEach((c, i) => { const own = i < 2 || CAR.own2.includes(t + c); h += '<i class="sw' + (cur === c ? ' on' : '') + (own ? '' : ' lk') + '" data-m="' + t + ':' + c + ':' + i + '" style="background:' + (c || 'repeating-linear-gradient(45deg,#666 0 4px,#222 4px 8px)') + '" title="' + (own ? 'owned' : cl(mp(i))) + '"></i>' }); h += '</div>' };
+        row('b', COLS, CAR.color, '🎨 Body colour'); row('w', WCOL, CAR.wc || WCOL[0], '🛞 Wheels'); row('s', SCOL, CAR.sc, '🏁 Stripe');
+        h += '<div class="gn">🔒 = locked · pehle 2 free · agle 🪙25 · last 💎2 · colours built-in styles par lagte hain</div>';
+      } else {
+        h += '<div class="gr">';
+        for (const id in TH) { const t = TH[id], sk = t.p ? t.p.sky : Z[0].sky, gA = t.p ? t.p.gA : Z[0].gA;
+          h += card('data-th="' + id + '"', '<i class="th" style="background:linear-gradient(' + sk[0] + ',' + sk[1] + ' 40%,' + sk[2] + ' 62%,' + gA + ' 62%)"></i>', t.n, t.s, CAR.th.includes(id), CAR.theme === id, [t.c, t.d]) }
+        h += '</div>';
       }
-      $('shop').innerHTML = h + '<p class="bt" id="cl">Continue</p>'; drawPv();
+      $('shop').innerHTML = h + '</div><div class="bar"><p class="bt" id="cl">▶ Continue</p></div>'; drawPv();
     }
     function buy(k) { const u = UI.find(x => x[0] === k), pr = u[3] * (UP[k] + 1); if (UP[k] >= u[4] || coins < pr) { snd(120, .15); return } coins -= pr; UP[k]++; if (k === 'hp') lives++; save(); snd(600, .15, 'sine'); renderShop() }
     addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (!started) return; if (k === 'p') { paused = !paused; [A.bgmusic, A.carsound].forEach(a => paused ? a.pause() : a.play().catch(() => { })); toast(paused ? 'PAUSE' : 'GO', 700) } if (k === 'u') openShop(!shopOpen); if (k === 'o') openSet(!setOpen); if (k === 'c') setCam((SET.cm + 1) % 3); if (k === '[' || k === 'pagedown') adjCam(-1); if (k === ']' || k === 'pageup') adjCam(1); if (k === 'escape') { openShop(false); openSet(false) } if ((k === 'enter' || k === ' ') && state === 'over' && !shopOpen) restart() });
@@ -481,12 +563,18 @@
     $('bn').onclick = () => { nTap = !nTap };
     $('bh').onclick = () => started && horn(); ['bs', 'bn', 'bh'].forEach(i => $(i).addEventListener('touchstart', e => e.stopPropagation(), { passive: true }));
     $('shop').addEventListener('click', e => {
-      const t = e.target, u = t.closest('.up');
-      if (t.dataset.tab) { tab = +t.dataset.tab; renderShop() }
-      else if (t.dataset.col) { CAR.color = t.dataset.col; save(); renderShop() }
-      else if (u && u.dataset.st) { const s = u.dataset.st, p = STP[s][0]; if (CAR.own.includes(s)) CAR.style = s; else if (coins >= p) { coins -= p; CAR.own.push(s); CAR.style = s; snd(600, .15, 'sine') } else snd(120, .15); save(); renderShop() }
-      else if (u) buy(u.dataset.k);
-      if (t.id === 'cl') openShop(false)
+      const t = e.target, u = t.closest('.up'), sw = t.closest('.sw');
+      const pay = (c, d) => { if (coins >= c && dia >= d) { coins -= c; dia -= d; snd(600, .15, 'sine'); return true } snd(120, .15); return false };
+      if (t.id === 'cl') { openShop(false); return }
+      if (t.dataset.tab) tab = +t.dataset.tab;
+      else if (sw) { const [m, c, i] = sw.dataset.m.split(':'), own = +i < 2 || CAR.own2.includes(m + c), p = mp(+i);
+        if (own || pay(p[0], p[1])) { if (!own) CAR.own2.push(m + c); if (m === 'b') CAR.color = c; else if (m === 'w') CAR.wc = c; else CAR.sc = c } }
+      else if (u && u.dataset.st) { const k = u.dataset.st; if (CAR.own.includes(k) || pay(STP[k][0], 0)) { if (!CAR.own.includes(k)) CAR.own.push(k); CAR.style = k; CAR.img = -1 } }
+      else if (u && u.dataset.im) { const i = +u.dataset.im, p = IMGP[i]; if (CAR.imgOwn.includes(i) || pay(p[0], p[1])) { if (!CAR.imgOwn.includes(i)) CAR.imgOwn.push(i); CAR.img = i } }
+      else if (u && u.dataset.th) { const id = u.dataset.th, T2 = TH[id]; if (CAR.th.includes(id) || pay(T2.c, T2.d)) { if (!CAR.th.includes(id)) CAR.th.push(id); CAR.theme = id; setTheme(id) } }
+      else if (u && u.dataset.cv) { if (pay(400, 0)) dia++ }
+      else if (u && u.dataset.k) { buy(u.dataset.k); return }
+      save(); renderShop();
     });
     $('shop').addEventListener('input', e => { if (e.target.id === 'cc') { CAR.color = e.target.value; drawPv(); save() } });
     $('over').addEventListener('click', e => { if (e.target.id === 'gg') openShop(true); else restart() });
@@ -530,7 +618,7 @@
 
     let ac, osc, vol;
     function begin() {
-      if (started || !window.splashDone) return; started = true;
+      if (started || !window.splashDone) return; started = true; daily();
       document.getElementById('start').style.display = 'none'; A.bgmusic.play().catch(() => { }); A.carsound.play().catch(() => { });
       try {
         ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -571,12 +659,22 @@
       const top = MAX * 1.25 * (CAR.style === 'sports' ? 1.06 : 1) * (1 + UP.eng * .08) * (wn ? 1.3 : 1);
       const target = (!live || down) ? 0 : ((up || wn) ? top : MAX * .75 * (1 + UP.eng * .04));
       const finalTarget = target * SET.ms;
-      speed += (finalTarget - speed) * Math.min(1, dt * (!live ? 3 : down ? 1.8 : .5));
+      speed += (finalTarget - speed) * Math.min(1, dt * (!live ? 3 : down ? 2.8 : 1.0));
       const sp = speed / MAX, k = Math.floor(pos / SEG), c = curve(k), steer = (r ? 1 : 0) - (l ? 1 : 0);
-      px += steer * dt * 2.6 * sp * (1 - rain * .15 * (1 - UP.tire * .15)) * (1 + UP.tire * .1);
-      px -= c * dt * sp * sp;
-      px = Math.max(-3, Math.min(3, px));
-      steerVis += (steer - steerVis) * Math.min(1, dt * 8);
+      const grip = (1 - rain * .15 * (1 - UP.tire * .15)) * (1 + UP.tire * .1);
+      const want = steer * (1.6 * Math.min(1, sp * 4) + 2.6 * Math.min(1.2, sp)) * grip;
+      pvx += (want - pvx) * Math.min(1, dt * (steer ? 14 : 18));
+      px += pvx * dt;
+      px -= c * dt * sp * sp * .8;
+      if (Math.abs(px) > 3) pvx = 0; px = Math.max(-3, Math.min(3, px));
+      if (live && zoneOf(Math.floor((pos + PZ) / SEG)) === 4 && Math.abs(px) > 1.04) {
+        const wd = Math.sign(px), hv = Math.abs(pvx); px = wd * 1.04; if (pvx * wd > 0) pvx = -pvx * .35;
+        speed *= 1 - Math.min(.5, dt * .9);
+        const wcw = H * .19, ex = W / 2 + wd * wcw * .5, ey = H * .88;
+        emit(hv > .8 ? 18 : 3, ex, ey, wcw * 2.2, wcw * 1.4, Math.random() < .5 ? '#ffd24a' : '#fff6c8', wcw * .018, .5);
+        if (hv > .8) { bump = Math.max(bump, .6); snd(180, .12, 'sawtooth', .07) }
+      }
+      steerVis += (steer - steerVis) * Math.min(1, dt * 12);
       if (live && Math.abs(px) > 1.05 && speed > MAX * .35) speed = Math.max(MAX * .35, speed - dt * MAX * .9);
       const pk = Math.floor((pos + PZ) / SEG);
       pos += speed * dt;
@@ -600,9 +698,13 @@
       }
       while (coinsA.length < 12) { const lz = coinsA.length ? coinsA[coinsA.length - 1].z : pos + PZ, b = lz + SEG * (10 + Math.random() * 25), x = (Math.random() - .5) * 1.4; for (let i = 0; i < 5; i++)coinsA.push({ z: b + i * SEG * 1.6, x }) }
       for (let i = coinsA.length - 1; i >= 0; i--) { const co = coinsA[i]; if (live && Math.abs(co.z - (pos + PZ)) < 70 && Math.abs(co.x - px) < .1) { coinsA.splice(i, 1); coins++; runC++; snd(900, .1, 'sine', .05) } else if (co.z < pos - 300) coinsA.splice(i, 1) }
+      if (live) {
+        for (let q = pk; q <= nk; q++) { const dx = diaAt(q); if (dx !== null && Math.abs(dx - px) < .22) { diaGot.add(q); dia++; snd(1200, .2, 'sine', .08); prize() } }
+        if (Math.floor(pos / 500000) > mil) { mil++; dia++; toast('🏁 ' + mil * 5 + ' km! +1 💎', 1800); save() }
+      }
       if (!live && state !== 'over') { stT += dt; if (stT > 2) { if (lives > 0) respawn(); else endGame() } }
       curZ = zoneOf(Math.floor((pos + PZ) / SEG));
-      const tgt = Z[curZ].sky.map(h2r), f = Math.min(1, dt * 1.6);
+      const tgt = ZA[curZ].sky.map(h2r), f = Math.min(1, dt * 1.6);
       for (let i = 0; i < 3; i++)for (let j = 0; j < 3; j++)skyCur[i][j] += (tgt[i][j] - skyCur[i][j]) * f;
       const wet = rainOverride === null ? (Math.sin(T * .031 + 2) > .5) : rainOverride;
       rain += ((wet ? 1 : 0) - rain) * Math.min(1, dt * .7);
@@ -612,7 +714,7 @@
       $('sp').textContent = Math.round(speed / 60);
       $('km').textContent = (pos / 100000).toFixed(1) + ' km · G' + (gear + 1);
       $('zn').textContent = Z[curZ].n;
-      $('lv').innerHTML = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, maxLives() - lives)) + '<br>🪙 ' + coins + ' &nbsp;⭐ ' + score();
+      $('lv').innerHTML = '❤️'.repeat(Math.max(0, lives)) + '🖤'.repeat(Math.max(0, maxLives() - lives)) + '<br>🪙 ' + coins + ' &nbsp;💎 ' + dia + ' &nbsp;⭐ ' + score();
       $('nf').style.width = nit * 100 + '%';
 
       let alertMsg = '';
@@ -714,7 +816,7 @@
       if (cr) { g.translate(cx, cy); g.rotate(Math.min(stT * 3, 1) * .1); g.translate(-cx, -cy) }
       g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(cx, cy + ch * .12, cw * .55, ch * .18, 0, 0, 7); g.fill();
       if (nitOn) { g.fillStyle = '#ffb347'; for (const s of [-1, 1]) { g.beginPath(); g.moveTo(cx + s * cw * .3, cy - ch * .35); g.lineTo(cx + s * cw * .34, cy + ch * (.15 + Math.random() * .5)); g.lineTo(cx + s * cw * .22, cy - ch * .35); g.fill() } }
-      const br = keys.arrowdown || keys.s || keys[' '] || tb; g.save(); g.translate(cx, cy); g.rotate(steerVis * .025 * Math.min(1, speed / MAX)); g.translate(-cx, -cy); car(cx, cy, cw, CAR.color, CAR.style, { brake: br, night: nightAmt() }); g.restore();
+      const br = keys.arrowdown || keys.s || keys[' '] || tb; g.save(); g.translate(cx, cy); g.rotate(steerVis * .025 * Math.min(1, speed / MAX)); g.translate(-cx, -cy); pcar(cx, cy, cw, { brake: br, night: nightAmt() }); g.restore();
       g.restore();
       if (dr) {
         const wy = cy + ch * .12; g.lineWidth = 2; for (let i = 0; i < 3; i++) { g.strokeStyle = 'rgba(225,242,255,' + (.55 - i * .15) + ')'; g.beginPath(); g.ellipse(cx, wy, cw * (.35 + stT * .3 + i * .2), ch * (.12 + i * .05), 0, 0, 7); g.stroke() }
@@ -730,7 +832,7 @@
       if (bump > 0) g.translate((Math.random() - .5) * bump * 14, (Math.random() - .5) * bump * 14);
       drawSky();
       const n = nightAmt();
-      g.fillStyle = Z[curZ].gA; g.fillRect(0, HZ, W, H - HZ);
+      g.fillStyle = ZA[curZ].gA; g.fillRect(0, HZ, W, H - HZ);
       const k0 = Math.floor(pos / SEG), rem = pos % SEG;
       let x = 0, dx = -curve(k0) * (rem / SEG);
       const P = [];
@@ -742,7 +844,7 @@
       for (let j = N - 1; j >= 0; j--) {
         const a = P[j], b = P[j + 1];
         if (b.sy >= a.sy) continue;
-        const k = k0 + j, zi = zoneOf(k), Zz = Z[zi], band = Math.floor(k / 3) % 2, h = hash(k);
+        const k = k0 + j, zi = zoneOf(k), Zz = ZA[zi], band = Math.floor(k / 3) % 2, h = hash(k);
         g.fillStyle = band ? Zz.gB : Zz.gA; g.fillRect(0, b.sy, W, a.sy - b.sy + 1);
         const pnd = pondSide(k), cr = crossK(k);
         if (pnd) quad([a.sx + pnd * a.w * 1.22, a.sy], [a.sx + pnd * W * 3, a.sy], [b.sx + pnd * W * 3, b.sy], [b.sx + pnd * b.w * 1.22, b.sy], band ? '#2c7391' : '#33809e');
@@ -792,6 +894,10 @@
           const cx = a.sx + c.x * a.w, cw = a.w * .34;
           if (cw > 2) car(cx, a.sy, cw * (c.t === 'truck' || c.t === 'bus' ? 1.25 : 1), c.c, c.t, { night: n });
         }
+        const dxk = diaAt(k);
+        if (dxk !== null) { const r = a.w * .14, dcx = a.sx + dxk * a.w, dcy = a.sy - a.w * .22, bb = Math.sin(T * 3 + k) * r * .15;
+          if (r > 2) { g.fillStyle = '#5fe3ff'; g.beginPath(); g.moveTo(dcx, dcy - r + bb); g.lineTo(dcx + r * .75, dcy + bb); g.lineTo(dcx, dcy + r + bb); g.lineTo(dcx - r * .75, dcy + bb); g.closePath(); g.fill();
+            g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.moveTo(dcx, dcy - r + bb); g.lineTo(dcx - r * .75, dcy + bb); g.lineTo(dcx, dcy + r * .1 + bb); g.closePath(); g.fill() } }
         for (const co of coinsA) {
           if(Math.floor(co.z/SEG)!==k)continue;
           const r=a.w*.09,sw=Math.abs(Math.cos(T*4+co.z*.003)),cx=a.sx+co.x*a.w,cy=a.sy-a.w*.16;
