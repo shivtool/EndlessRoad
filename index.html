@@ -383,7 +383,7 @@
     // ================= ASSETS (src folder) =================
     const SRC = 'https://shivtool.github.io/EndlessRoad/src/', miss = [];
     const ld = { t: 0, d: 0 }, fin = () => ld.d++;
-    const loadImg = n => { const i = new Image(); i.ok = false; ld.t++; i.onload = () => { i.ok = true; fin() }; i.onerror = () => { miss.push(n); fin() }; i.src = SRC + n; return i };
+    const loadImg = n => { const i = new Image(); i.ok = false; ld.t++; i.onload = () => { i.ok = true; fin() }; i.onerror = () => { if (!i.rt) { i.rt = 1; i.src = SRC + n } else { miss.push(n); fin() } }; i.src = 'src/' + n; return i };
     const six = [1, 2, 3, 4, 5, 6];
     const TR = six.map(i => loadImg('tree' + i + '.png')), HO = six.map(i => loadImg('house' + i + '.png'));
     const TS = six.map(i => loadImg('treesmal' + i + '.png')).concat([loadImg('treesmal.png')]);
@@ -940,6 +940,6 @@
     }
     requestAnimationFrame(frame);
   </script>
+  <script src="src/enhance.js"></script>
 </body>
-
 </html>
