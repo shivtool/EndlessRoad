@@ -117,23 +117,110 @@
     g.globalAlpha = 1;
     // shooting star
     if (!shoot && R() < .004 * a0) shoot = { x: w * .1 + R() * w * .8, y: R() * top * .4, vx: (8 + R() * 6) * s * (R() < .5 ? -1 : 1), vy: (3 + R() * 3) * s, l: 1 };
-    if (shoot) { const q = shoot; q.x += q.vx * 2; q.y += q.vy * 2; q.l -= .03; const tx = q.x - q.vx * 9, ty = q.y - q.vy * 9, lg = g.createLinearGradient(q.x, q.y, tx, ty);
+    if (shoot) {
+      const q = shoot; q.x += q.vx * 2; q.y += q.vy * 2; q.l -= .03; const tx = q.x - q.vx * 9, ty = q.y - q.vy * 9, lg = g.createLinearGradient(q.x, q.y, tx, ty);
       lg.addColorStop(0, 'rgba(255,255,255,' + a0 * Math.max(0, q.l) + ')'); lg.addColorStop(1, 'rgba(255,255,255,0)');
-      g.strokeStyle = lg; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(tx, ty); g.stroke(); if (q.l <= 0) shoot = null }
-    // half moon with glow, earthshine, craters
+      g.strokeStyle = lg; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(tx, ty); g.stroke(); if (q.l <= 0) shoot = null
+    }
+// half moon with glow, earthshine, craters, and a gleaming star on one tip
     const mx = w * .78 + Math.sin(T * .03) * w * .015, my = top * .42, r = Math.max(18, h * .055);
-    const gl = g.createRadialGradient(mx, my, r * .6, mx, my, r * 5.5); gl.addColorStop(0, 'rgba(170,200,255,' + a0 * (.3 + .04 * Math.sin(T * .8)) + ')'); gl.addColorStop(1, 'rgba(170,200,255,0)');
-    g.fillStyle = gl; g.beginPath(); g.arc(mx, my, r * 5.5, 0, 7); g.fill();
-    g.globalCompositeOperation = 'source-over'; g.globalAlpha = Math.min(1, a0 * 1.2);
-    g.fillStyle = 'rgba(40,55,95,.55)'; g.beginPath(); g.arc(mx, my, r, Math.PI / 2, Math.PI * 1.5); g.closePath(); g.fill();
-    const lm = g.createLinearGradient(mx, my - r, mx + r, my + r); lm.addColorStop(0, '#fffbe8'); lm.addColorStop(1, '#d9d2b8');
-    g.fillStyle = lm; g.beginPath(); g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); g.closePath(); g.fill();
-    g.save(); g.beginPath(); g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); g.closePath(); g.clip(); g.fillStyle = 'rgba(120,110,90,.28)';
-    for (const [cx, cy, cr] of [[.35, -.3, .16], [.55, .25, .2], [.2, .5, .11], [.7, -.1, .09]]) { g.beginPath(); g.arc(mx + cx * r, my + cy * r, cr * r, 0, 7); g.fill() }
+    
+    // Outer atmospheric glow
+    const gl = g.createRadialGradient(mx, my, r * .6, mx, my, r * 5.5); 
+    gl.addColorStop(0, 'rgba(170,200,255,' + a0 * (.3 + .04 * Math.sin(T * .8)) + ')'); 
+    gl.addColorStop(1, 'rgba(170,200,255,0)');
+    g.fillStyle = gl; 
+    g.beginPath(); 
+    g.arc(mx, my, r * 5.5, 0, Math.PI * 2); 
+    g.fill();
+
+    g.save();
+    g.globalCompositeOperation = 'source-over'; 
+    g.globalAlpha = Math.min(1, a0 * 1.2);
+
+    // Earthshine (dark side illuminated by earth)
+    g.fillStyle = 'rgba(45,60,100,.65)'; 
+    g.beginPath(); 
+    g.arc(mx, my, r, Math.PI / 2, Math.PI * 1.5); 
+    g.closePath(); 
+    g.fill();
+
+    // Lit side of the moon
+    const lm = g.createLinearGradient(mx - r, my - r, mx + r, my + r); 
+    lm.addColorStop(0, '#ffffee'); 
+    lm.addColorStop(0.5, '#e6dec2');
+    lm.addColorStop(1, '#b8b095');
+    g.fillStyle = lm; 
+    g.beginPath(); 
+    g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); 
+    g.closePath(); 
+    g.fill();
+
+    // Realistic craters with inner shadows and rims
+    g.save(); 
+    g.beginPath(); 
+    g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); 
+    g.closePath(); 
+    g.clip(); 
+    
+    const craters = [
+        [.30, -.4, .18, 'rgba(90,80,65,.35)'], 
+        [.50, .20, .22, 'rgba(90,80,65,.4)'], 
+        [.15, .55, .12, 'rgba(90,80,65,.3)'], 
+        [.65, -.15, .10, 'rgba(90,80,65,.35)'],
+        [.45, -.10, .14, 'rgba(255,255,255,.2)'] // Crater rim highlight
+    ];
+    
+    for (const [cx, cy, cr, col] of craters) { 
+        g.fillStyle = col;
+        g.beginPath(); 
+        g.arc(mx + cx * r, my + cy * r, cr * r, 0, Math.PI * 2); 
+        g.fill(); 
+    }
     g.restore();
-    g.strokeStyle = 'rgba(255,250,225,.5)'; g.lineWidth = 1.2 * s; g.beginPath(); g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); g.stroke();
-    g.globalAlpha = 1; g.restore();
-  }
+
+    // Terminator edge soft highlight & limb glowing stroke
+    g.strokeStyle = 'rgba(255,255,240,.65)'; 
+    g.lineWidth = 1.4 * s; 
+    g.beginPath(); 
+    g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); 
+    g.stroke();
+
+    // --- GLEAMING STAR ON THE TOP TIP ---
+    const starX = mx;
+    const starY = my - r - (4 * s);
+    const starPulse = .7 + .3 * Math.sin(T * 3.5);
+    const starSize = (6 + 2 * Math.sin(T * 2)) * s;
+
+    g.save();
+    g.translate(starX, starY);
+    g.scale(starPulse, starPulse);
+
+    // Star glow aura
+    const stGlow = g.createRadialGradient(0, 0, 0, 0, 0, starSize * 2.5);
+    stGlow.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+    stGlow.addColorStop(0.4, 'rgba(200, 225, 255, 0.4)');
+    stGlow.addColorStop(1, 'rgba(150, 200, 255, 0)');
+    g.fillStyle = stGlow;
+    g.beginPath();
+    g.arc(0, 0, starSize * 2.5, 0, Math.PI * 2);
+    g.fill();
+
+    // 4-Point Star Shape
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.moveTo(0, -starSize * 1.8);
+    g.quadraticCurveTo(0, 0, starSize * 1.8, 0);
+    g.quadraticCurveTo(0, 0, 0, starSize * 1.8);
+    g.quadraticCurveTo(0, 0, -starSize * 1.8, 0);
+    g.quadraticCurveTo(0, 0, 0, -starSize * 1.8);
+    g.closePath();
+    g.fill();
+
+    g.restore();
+
+    g.globalAlpha = 1; 
+    g.restore();
 
   // ---- floating dust (day) and fireflies (night) ----
   const PARTS = Array.from({ length: 48 }, () => ({ x: R(), y: R(), v: .3 + R() * .7, p: R() * 6.28, r: .6 + R() * 1.4 }));
