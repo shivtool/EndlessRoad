@@ -13,7 +13,7 @@
     lensRain: true, speedFx: true, vignette: true, grain: true, nitroZoom: true, night: true,
     clouds: true, aurora: true, particles: true, lightning: true, beams: true,
     flare: true, fog: true, chroma: true, nitroGlow: true, bokeh: true,
-    golden: true, rainbow: true, birds: true, wiper: false, sparks: true, splash: true,
+    hideSun: true, bloom: true, zoomBlur: true, adapt: true, insects: true, pollen: true, heatLightning: true, golden: true, rainbow: true, birds: true, wiper: false, taillights: false, sparks: true, splash: true,
     heat: true, caveFx: true, auto: true
   }, window.ENH);
 
@@ -47,6 +47,8 @@
   const rgba = (c, a) => 'rgba(' + c.map(Math.round).join(',') + ',' + a + ')';
   const GRADE = ['rgba(70,160,110,.10)', 'rgba(255,170,90,.10)', 'rgba(70,130,220,.12)', 'rgba(210,90,210,.10)', 'rgba(50,200,200,.10)'];
   const R = Math.random, TAU = Math.PI * 2;
+  const ss = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t) };
+  console.log('[enhance] v6 loaded (+bloom, zoom blur, eye adaptation, insects, pollen, heat lightning)'); window.ENH_VERSION = 6;
 
   let vk = '', vg = null;
   const vig = () => { const k = W + 'x' + H; if (k !== vk) { vk = k; vg = g.createRadialGradient(W / 2, H * .55, H * .35, W / 2, H * .55, H * .95); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.55)') } return vg };
@@ -99,17 +101,24 @@
   const STARS = Array.from({ length: 190 }, (_, i) => { const r = R(); return { x: R(), y: R(), t: r < .58 ? 0 : r < .78 ? 1 : r < .9 ? 2 : 3, p: R() * 6.28, s: 1 + R() * 3, c: ['#ffffff', '#cfe3ff', '#fff1c9', '#ffd2c2', '#bcd0ff'][i % 5] } });
   let shoot = null;
   function drawNight(n, w, h) {
-    const a0 = n * (1 - rain * .8); if (a0 < .04) return;
+    const a0 = ss(.25, .75, n) * (1 - rain * .8); if (a0 < .04) return;
     const top = HZ * .62, off = (typeof bg === 'number' ? bg : 0) * .03, s = h / 900;
     g.save(); g.beginPath(); g.rect(0, 0, w, HZ); g.clip();
+    // night grade: near-black brown sky with a warm maroon/orange glow low on the horizon
+    { const gg = g.createLinearGradient(0, 0, 0, HZ);
+      gg.addColorStop(0, 'rgba(6,5,10,' + a0 * .55 + ')'); gg.addColorStop(.6, 'rgba(18,10,14,' + a0 * .35 + ')'); gg.addColorStop(1, 'rgba(90,35,30,' + a0 * .3 + ')');
+      g.fillStyle = gg; g.fillRect(0, 0, w, HZ);
+      g.globalCompositeOperation = 'lighter';
+      const hg = g.createLinearGradient(0, HZ - h * .18, 0, HZ); hg.addColorStop(0, 'rgba(220,100,50,0)'); hg.addColorStop(1, 'rgba(220,100,50,' + a0 * .22 + ')');
+      g.fillStyle = hg; g.fillRect(0, HZ - h * .18, w, h * .18); g.globalCompositeOperation = 'source-over' }
     // milky way band
     g.save(); g.globalCompositeOperation = 'lighter'; g.translate(w * .38, top * .55); g.rotate(-.35); g.scale(3.2, .3);
-    const mg = g.createRadialGradient(0, 0, 0, 0, 0, h * .3); mg.addColorStop(0, 'rgba(190,210,255,' + a0 * .12 + ')'); mg.addColorStop(1, 'rgba(190,210,255,0)');
+    const mg = g.createRadialGradient(0, 0, 0, 0, 0, h * .3); mg.addColorStop(0, 'rgba(190,210,255,' + a0 * .06 + ')'); mg.addColorStop(1, 'rgba(190,210,255,0)');
     g.fillStyle = mg; g.beginPath(); g.arc(0, 0, h * .3, 0, 7); g.fill(); g.restore();
     // stars
     g.globalCompositeOperation = 'lighter';
     for (const st of STARS) {
-      const x = (((st.x + off) % 1) + 1) % 1 * w, y = st.y * top, tw = .55 + .45 * Math.sin(T * (1.5 + st.s * .5) + st.p), a = a0 * tw * (1 - st.y * .5);
+      const x = (((st.x + off) % 1) + 1) % 1 * w, y = st.y * top, tw = .55 + .45 * Math.sin(T * (1.5 + st.s * .5) + st.p), a = a0 * .6 * tw * (1 - st.y * .5);
       g.globalAlpha = Math.max(0, a); g.fillStyle = st.c;
       if (st.t === 0) g.fillRect(x, y, s * 1.4, s * 1.4);
       else if (st.t === 1) { g.beginPath(); g.arc(x, y, s * 1.8, 0, 7); g.fill(); g.globalAlpha *= .25; g.beginPath(); g.arc(x, y, s * 5, 0, 7); g.fill() }
@@ -124,107 +133,61 @@
       lg.addColorStop(0, 'rgba(255,255,255,' + a0 * Math.max(0, q.l) + ')'); lg.addColorStop(1, 'rgba(255,255,255,0)');
       g.strokeStyle = lg; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(tx, ty); g.stroke(); if (q.l <= 0) shoot = null
     }
-// half moon with glow, earthshine, craters, and a gleaming star on one tip
-    const mx = w * .78 + Math.sin(T * .03) * w * .015, my = top * .42, r = Math.max(18, h * .055);
-    
-    // Outer atmospheric glow
-    const gl = g.createRadialGradient(mx, my, r * .6, mx, my, r * 5.5); 
-    gl.addColorStop(0, 'rgba(170,200,255,' + a0 * (.3 + .04 * Math.sin(T * .8)) + ')'); 
-    gl.addColorStop(1, 'rgba(170,200,255,0)');
-    g.fillStyle = gl; 
-    g.beginPath(); 
-    g.arc(mx, my, r * 5.5, 0, Math.PI * 2); 
-    g.fill();
-
-    g.save();
-    g.globalCompositeOperation = 'source-over'; 
-    g.globalAlpha = Math.min(1, a0 * 1.2);
-
-    // Earthshine (dark side illuminated by earth)
-    g.fillStyle = 'rgba(45,60,100,.65)'; 
-    g.beginPath(); 
-    g.arc(mx, my, r, Math.PI / 2, Math.PI * 1.5); 
-    g.closePath(); 
-    g.fill();
-
-    // Lit side of the moon
-    const lm = g.createLinearGradient(mx - r, my - r, mx + r, my + r); 
-    lm.addColorStop(0, '#ffffee'); 
-    lm.addColorStop(0.5, '#e6dec2');
-    lm.addColorStop(1, '#b8b095');
-    g.fillStyle = lm; 
-    g.beginPath(); 
-    g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); 
-    g.closePath(); 
-    g.fill();
-
-    // Realistic craters with inner shadows and rims
-    g.save(); 
-    g.beginPath(); 
-    g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); 
-    g.closePath(); 
-    g.clip(); 
-    
-    const craters = [
-        [.30, -.4, .18, 'rgba(90,80,65,.35)'], 
-        [.50, .20, .22, 'rgba(90,80,65,.4)'], 
-        [.15, .55, .12, 'rgba(90,80,65,.3)'], 
-        [.65, -.15, .10, 'rgba(90,80,65,.35)'],
-        [.45, -.10, .14, 'rgba(255,255,255,.2)'] // Crater rim highlight
-    ];
-    
-    for (const [cx, cy, cr, col] of craters) { 
-        g.fillStyle = col;
-        g.beginPath(); 
-        g.arc(mx + cx * r, my + cy * r, cr * r, 0, Math.PI * 2); 
-        g.fill(); 
+    // ---- thin textured crescent moon, thin dark clouds and distant city lights ----
+    const mx = w * .7 + Math.sin(T * .03) * w * .012, my = top * .45, r = Math.max(24, h * .07), sc = r / 118, ma = Math.min(1, a0 * 1.2);
+    g.save(); g.globalCompositeOperation = 'lighter';
+    // warm halo, stronger on the lit side
+    const hx = mx + Math.cos(.7) * r * .35, hy = my + Math.sin(.7) * r * .35;
+    const hl = g.createRadialGradient(hx, hy, r * .4, hx, hy, r * 4.5);
+    hl.addColorStop(0, 'rgba(255,190,130,' + ma * (.16 + .02 * Math.sin(T * .8)) + ')'); hl.addColorStop(1, 'rgba(255,190,130,0)');
+    g.fillStyle = hl; g.beginPath(); g.arc(hx, hy, r * 4.5, 0, TAU); g.fill();
+    g.restore();
+    g.save(); g.translate(mx, my); g.rotate(.7);
+    g.globalAlpha = ma; g.drawImage(moonSprite(), -128 * sc, -128 * sc, 256 * sc, 256 * sc);       // the crescent
+    g.globalCompositeOperation = 'lighter'; g.globalAlpha = ma * .35; g.drawImage(moonSprite(), -128 * sc * 1.08, -128 * sc * 1.08, 256 * sc * 1.08, 256 * sc * 1.08);  // soft bloom
+    g.restore();
+    // thin dark clouds drifting slowly
+    g.fillStyle = 'rgba(8,8,14,' + a0 * .5 + ')';
+    for (const c of NCLOUDS) {
+      const cx = ((((c.x + T * c.v) % 1.4) + 1.4) % 1.4 - .2) * w, cy = c.y * HZ, cw = c.w * w;
+      for (let j = 0; j < 5; j++) { g.beginPath(); g.ellipse(cx + (j - 2) * cw * .22, cy + Math.sin(c.k + j * 1.7) * h * .004, cw * (.16 + .06 * Math.sin(c.k + j)), h * (.008 + .004 * Math.sin(c.k * 2 + j)), 0, 0, TAU); g.fill() }
     }
+    // far-away city lights along the horizon
+    g.save(); g.globalCompositeOperation = 'lighter';
+    CITY.forEach((c, i) => {
+      const x = c.x * w, y = HZ - (3 + c.y * 14) * s, tw = .75 + .25 * Math.sin(T * 2 + i), rr = c.r * s * 1.4;
+      g.fillStyle = 'rgba(' + c.c + ',' + a0 * .18 * tw + ')'; g.beginPath(); g.arc(x, y, rr * 3, 0, TAU); g.fill();
+      g.fillStyle = 'rgba(' + c.c + ',' + a0 * .8 * tw + ')'; g.beginPath(); g.arc(x, y, rr, 0, TAU); g.fill();
+    });
     g.restore();
-
-    // Terminator edge soft highlight & limb glowing stroke
-    g.strokeStyle = 'rgba(255,255,240,.65)'; 
-    g.lineWidth = 1.4 * s; 
-    g.beginPath(); 
-    g.arc(mx, my, r, -Math.PI / 2, Math.PI / 2); 
-    g.stroke();
-
-    // --- GLEAMING STAR ON THE TOP TIP ---
-    const starX = mx;
-    const starY = my - r - (4 * s);
-    const starPulse = .7 + .3 * Math.sin(T * 3.5);
-    const starSize = (6 + 2 * Math.sin(T * 2)) * s;
-
-    g.save();
-    g.translate(starX, starY);
-    g.scale(starPulse, starPulse);
-
-    // Star glow aura
-    const stGlow = g.createRadialGradient(0, 0, 0, 0, 0, starSize * 2.5);
-    stGlow.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-    stGlow.addColorStop(0.4, 'rgba(200, 225, 255, 0.4)');
-    stGlow.addColorStop(1, 'rgba(150, 200, 255, 0)');
-    g.fillStyle = stGlow;
-    g.beginPath();
-    g.arc(0, 0, starSize * 2.5, 0, Math.PI * 2);
-    g.fill();
-
-    // 4-Point Star Shape
-    g.fillStyle = '#ffffff';
-    g.beginPath();
-    g.moveTo(0, -starSize * 1.8);
-    g.quadraticCurveTo(0, 0, starSize * 1.8, 0);
-    g.quadraticCurveTo(0, 0, 0, starSize * 1.8);
-    g.quadraticCurveTo(0, 0, -starSize * 1.8, 0);
-    g.quadraticCurveTo(0, 0, 0, -starSize * 1.8);
-    g.closePath();
-    g.fill();
-
-    g.restore();
-
-    g.globalAlpha = 1;
-    g.restore(); // closes moon save
     g.restore(); // closes sky clip save
   }
+
+  // ---- procedural crescent: textured maria, rough terminator, bright warm limb, faint earthshine ----
+  let moonSpr = null;
+  function moonSprite() {
+    if (moonSpr) return moonSpr;
+    const SZ = 256, MR = 118, CX = 128, CY = 128, cutX = CX - MR * .2, cutY = CY, c = document.createElement('canvas'); c.width = c.height = SZ;
+    const x = c.getContext('2d'), id = x.createImageData(SZ, SZ), d = id.data;
+    const hash = (i, j) => { const v = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return v - Math.floor(v) };
+    const vn = (px, py) => { const i = Math.floor(px), j = Math.floor(py), fx = px - i, fy = py - j, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy); return (hash(i, j) * (1 - u) + hash(i + 1, j) * u) * (1 - v) + (hash(i, j + 1) * (1 - u) + hash(i + 1, j + 1) * u) * v };
+    const fbm = (px, py) => vn(px, py) * .5 + vn(px * 2.1, py * 2.1) * .3 + vn(px * 4.3, py * 4.3) * .2;
+    const sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t) };
+    for (let py = 0; py < SZ; py++) for (let px = 0; px < SZ; px++) {
+      const dist = Math.hypot(px - CX, py - CY), edge = Math.min(1, Math.max(0, MR + .5 - dist)); if (edge <= 0) continue;
+      const e = Math.hypot(px - cutX, py - cutY) - MR + (fbm(px * .08, py * .08) - .5) * 10;   // distance past the shadow circle (wobbly = rough terminator)
+      const lit = sm(0, 5, e), lim = MR - dist, I = lit * (.6 + .4 * Math.exp(-lim / (MR * .15)));
+      const m = (.72 + .28 * fbm(px * .045 + 7, py * .045)) * (.9 + .1 * vn(px * .25, py * .25));  // maria + small craters
+      const k = Math.min(1, I), mm = Math.min(1.15, m * 1.2), lr = Math.min(255, 255 * mm), lg = Math.min(255, (222 + 24 * k) * mm), lb = Math.min(255, (160 + 55 * k) * mm);
+      const ae = .022 * edge * (1 - lit), oa = I * edge + (1 - I * edge) * ae, i = (py * SZ + px) * 4;
+      const wl = I * edge, we = (1 - wl) * ae, tot = Math.max(1e-6, wl + we);
+      d[i] = (lr * wl + 90 * we) / tot; d[i + 1] = (lg * wl + 80 * we) / tot; d[i + 2] = (lb * wl + 95 * we) / tot; d[i + 3] = Math.min(255, oa * 255);
+    }
+    x.putImageData(id, 0, 0); return (moonSpr = c);
+  }
+  const NCLOUDS = Array.from({ length: 6 }, () => ({ x: R(), y: .35 + R() * .5, w: .12 + R() * .2, v: .0015 + R() * .002, k: R() * 6 }));
+  const CITYC = ['255,170,80', '255,230,190', '255,120,60', '255,255,255', '150,200,255'];
+  const CITY = Array.from({ length: 70 }, () => ({ x: R(), y: R(), r: 1 + R() * 2.6, c: CITYC[(R() * CITYC.length) | 0] }));
 
   // ---- floating dust (day) and fireflies (night) ----
   const PARTS = Array.from({ length: 48 }, () => ({ x: R(), y: R(), v: .3 + R() * .7, p: R() * 6.28, r: .6 + R() * 1.4 }));
@@ -315,7 +278,7 @@
     if (Q.ema > 28) Q.bad++; else Q.bad = Math.max(0, Q.bad - 1);
     if (Q.bad > 120 && Q.lvl < 2) {
       Q.lvl++; Q.bad = 0; Q.ema = 16;
-      (Q.lvl === 1 ? ['grain', 'bokeh', 'particles', 'birds', 'heat', 'splash'] : ['clouds', 'aurora', 'chroma', 'fog', 'flare', 'lensRain', 'sparks']).forEach(k => { ENH[k] = false });
+      (Q.lvl === 1 ? ['grain', 'bokeh', 'particles', 'birds', 'heat', 'splash', 'bloom', 'pollen', 'insects'] : ['clouds', 'aurora', 'chroma', 'fog', 'flare', 'lensRain', 'sparks', 'zoomBlur']).forEach(k => { ENH[k] = false });
       say('PERFORMANCE MODE ' + Q.lvl);
     }
   }
@@ -376,10 +339,12 @@
       const gr = h * .03, hg = g.createRadialGradient(ox, oy, 0, ox, oy, gr);
       hg.addColorStop(0, 'rgba(255,248,225,' + .3 * lt * fl + ')'); hg.addColorStop(1, 'rgba(255,230,170,0)');
       g.fillStyle = hg; g.beginPath(); g.arc(ox, oy, gr, 0, TAU); g.fill();
-      // red tail-light glow at the rear of the car
-      const tx = cx + side * w * .029, ty = ly + h * .012, tr = h * .03, tg = g.createRadialGradient(tx, ty, 0, tx, ty, tr);
-      tg.addColorStop(0, 'rgba(255,50,40,' + (.3 + .25 * lt) + ')'); tg.addColorStop(1, 'rgba(255,40,30,0)');
-      g.fillStyle = tg; g.beginPath(); g.arc(tx, ty, tr, 0, TAU); g.fill();
+      // red tail-light glow (off by default: it is placed by screen position, not by the car sprite; enable with ENH.taillights = true)
+      if (ENH.taillights) {
+        const tx = cx + side * w * .029, ty = ly + h * .012, tr = h * .03, tg = g.createRadialGradient(tx, ty, 0, tx, ty, tr);
+        tg.addColorStop(0, 'rgba(255,50,40,' + (.3 + .25 * lt) + ')'); tg.addColorStop(1, 'rgba(255,40,30,0)');
+        g.fillStyle = tg; g.beginPath(); g.arc(tx, ty, tr, 0, TAU); g.fill();
+      }
     }
     g.restore();
   }
@@ -454,10 +419,10 @@
   let maxRain = 0, rbT = 1;
   function drawRainbow(day, w, h, s) {
     maxRain = Math.max(rain, maxRain * .9995);
-    if (maxRain > .45 && rain < .12 && day > .4 && rbT >= 1) { rbT = 0; maxRain = 0 }
+    if (maxRain > .45 && rain < .12 && day > .8 && rbT >= 1) { rbT = 0; maxRain = 0 }
     if (rbT >= 1) return;
     rbT += .0012;
-    const al = Math.pow(Math.max(0, Math.sin(Math.min(1, rbT) * Math.PI)), .7) * .2 * day;
+    const al = Math.pow(Math.max(0, Math.sin(Math.min(1, rbT) * Math.PI)), .7) * .2 * ss(.6, .9, day);
     const cols = [[255, 70, 70], [255, 150, 60], [255, 230, 80], [90, 220, 110], [70, 160, 255], [110, 100, 230], [170, 90, 220]];
     g.save(); g.beginPath(); g.rect(0, 0, w, HZ + h * .01); g.clip(); g.globalCompositeOperation = 'lighter'; g.lineWidth = h * .014;
     cols.forEach((c, i) => { g.strokeStyle = rgba(c, al); g.beginPath(); g.arc(w * .62, HZ + h * .05, h * .62 + i * h * .0125, Math.PI * 1.12, Math.PI * 1.88); g.stroke() });
@@ -511,6 +476,104 @@
     g.restore();
   }
 
+  // ---- hide the game's own sun disc at night (paints the surrounding sky colour over it, feathered) ----
+  let sunCol = null, sunTick = 0;
+  function coverSun(n, w, h) {
+    const k = ss(.35, .7, n); if (k < .02) return;
+    const sx = w * .5, sy = HZ * .62, rr = h * .12;
+    if (!sunCol || (++sunTick % 20) === 0) {
+      try {
+        const a = g.getImageData(Math.max(0, sx - rr | 0), sy | 0, 1, 1).data, b = g.getImageData(Math.min(w - 1, sx + rr | 0), sy | 0, 1, 1).data;
+        sunCol = [(a[0] + b[0]) >> 1, (a[1] + b[1]) >> 1, (a[2] + b[2]) >> 1];
+      } catch (e) { sunCol = sunCol || [20, 10, 30] }
+    }
+    const R2 = h * .085, cg = g.createRadialGradient(sx, sy, 0, sx, sy, R2);
+    cg.addColorStop(0, rgba(sunCol, k)); cg.addColorStop(.62, rgba(sunCol, k)); cg.addColorStop(1, rgba(sunCol, 0));
+    g.fillStyle = cg; g.beginPath(); g.arc(sx, sy, R2, 0, TAU); g.fill();
+  }
+
+  // =====================================================================
+  //  REALISM PACK (v6): bloom, zoom blur, eye adaptation, insects, pollen, heat lightning
+  // =====================================================================
+  // ---- highlight bloom: bright things (sun, lamps, coins, beams) softly glow like a real camera lens ----
+  let bl1 = null, bl2 = null, bx1 = null, bx2 = null;
+  function drawBloom(n, w, h) {
+    const sw = Math.max(32, (w / 6) | 0), sh = Math.max(18, (h / 6) | 0);
+    if (!bl1 || bl1.width !== sw || bl1.height !== sh) {
+      bl1 = document.createElement('canvas'); bl1.width = sw; bl1.height = sh; bx1 = bl1.getContext('2d');
+      bl2 = document.createElement('canvas'); bl2.width = sw >> 2; bl2.height = sh >> 2; bx2 = bl2.getContext('2d');
+    }
+    bx1.globalCompositeOperation = 'copy'; bx1.drawImage(cv, 0, 0, cv.width, cv.height, 0, 0, sw, sh);   // shrink the frame (this is the blur)
+    bx1.globalCompositeOperation = 'multiply'; bx1.drawImage(bl1, 0, 0); bx1.drawImage(bl1, 0, 0);          // multiply by itself: only highlights survive
+    bx2.globalCompositeOperation = 'copy'; bx2.drawImage(bl1, 0, 0, sw, sh, 0, 0, sw >> 2, sh >> 2);          // even wider glow
+    const k = (.3 + .25 * n) * (1 - rain * .4);
+    g.save(); g.globalCompositeOperation = 'lighter'; g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.globalAlpha = k; g.drawImage(bl1, 0, 0, w, h);
+    g.globalAlpha = k * 1.3; g.drawImage(bl2, 0, 0, w, h);
+    g.restore();
+  }
+
+  // ---- radial zoom blur at very high speed / nitro (screen edges only, the car area stays sharp) ----
+  function drawZoomBlur(sp, nitro, w, h) {
+    const k = Math.max(0, sp - .85) * .5 + (nitro ? .25 : 0); if (k < .03) return;
+    const ox = w / 2, oy = HZ;
+    g.save(); g.beginPath(); g.rect(0, 0, w, h); g.ellipse(w / 2, h * .78, w * .2, h * .22, 0, 0, TAU); g.clip('evenodd');
+    g.globalAlpha = Math.min(.22, k * .3);
+    for (const z of [1.012, 1.026]) g.drawImage(cv, 0, 0, cv.width, cv.height, ox - ox * z, oy - oy * z, w * z, h * z);
+    g.restore();
+  }
+
+  // ---- eye adaptation: dark for a moment when entering a cave, bright flash when leaving it ----
+  let prevCave = null, adapt = 0, adaptDir = 0;
+  function drawAdapt(cave, w, h) {
+    if (prevCave !== null && cave !== prevCave) { adapt = 1; adaptDir = cave ? -1 : 1 }
+    prevCave = cave; if (adapt <= .01) return;
+    g.save();
+    if (adaptDir > 0) { g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,240,215,' + adapt * .5 + ')' } else g.fillStyle = 'rgba(0,0,0,' + adapt * .45 + ')';
+    g.fillRect(0, 0, w, h); g.restore(); adapt *= .965;
+  }
+
+  // ---- small insects flying through the headlight beams at night ----
+  const BUGS = Array.from({ length: 14 }, () => ({ r: R(), sp: .5 + R() * 1.5, p: R() * 6.28 }));
+  function drawInsects(lt, w, h, s) {
+    if (lt < .35 || rain > .35 || state !== 'play') return;
+    const cx = w / 2 + (typeof ENH.carX === 'function' ? (+ENH.carX(w) || 0) : 0), oy = h * ((ENH.carY || .8) - .03);
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (const b of BUGS) {
+      const t = (T * .12 * b.sp + b.p) % 1, y = HZ + (.12 + t * .88) * (oy - HZ);
+      const x = cx + (b.r - .5) * 2 * w * .07 * t + Math.sin(T * b.sp * 3 + b.p) * w * .006 * t;
+      const tw = Math.sin(t * Math.PI), fl = .6 + .4 * Math.sin(T * 30 + b.p);
+      g.fillStyle = 'rgba(255,250,220,' + lt * .6 * tw * fl + ')'; g.beginPath(); g.arc(x, y, Math.max(.8, 2.2 * s * t), 0, TAU); g.fill();
+    }
+    g.restore();
+  }
+
+  // ---- floating pollen / dust glinting in the sunlight (daytime) ----
+  const POL = Array.from({ length: 40 }, () => ({ x: R(), y: R(), v: .2 + R() * .6, r: .6 + R() * 1.4, p: R() * 6.28 }));
+  function drawPollen(day, w, h, s) {
+    const a = day * (1 - rain) * .6; if (a < .08) return;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    for (const p of POL) {
+      const x = ((((p.x + T * .004 * p.v + Math.sin(T * .6 + p.p) * .01) % 1) + 1) % 1) * w, y = ((((p.y + T * .006 * p.v) % 1) + 1) % 1) * h * .9 + h * .05;
+      const gl = .4 + .6 * Math.max(0, Math.sin(T * (.8 + p.v) + p.p));
+      g.fillStyle = 'rgba(255,240,200,' + a * .5 * gl + ')'; g.beginPath(); g.arc(x, y, p.r * s * 1.4, 0, TAU); g.fill();
+    }
+    g.restore();
+  }
+
+  // ---- silent distant lightning flickering inside the storm clouds ----
+  let hlFlash = 0, hlX = .5;
+  function drawHeatLightning(n, w, h) {
+    if (rain < .25) return;
+    if (hlFlash < .02 && R() < .004 * rain) { hlFlash = 1; hlX = .1 + R() * .8 }
+    if (hlFlash < .01) return;
+    const f = hlFlash * (.6 + .4 * Math.sin(T * 50)) * (.4 + .6 * n); hlFlash *= .9;
+    g.save(); g.beginPath(); g.rect(0, 0, w, HZ); g.clip(); g.globalCompositeOperation = 'lighter';
+    const gr = g.createRadialGradient(w * hlX, HZ * .45, 0, w * hlX, HZ * .45, w * .3);
+    gr.addColorStop(0, 'rgba(190,200,255,' + .28 * f + ')'); gr.addColorStop(1, 'rgba(190,200,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, HZ); g.restore();
+  }
+
   // ---- 3. post-processing pass, runs after the game draws each frame ----
   function post() {
     if (!started || ENH.master === false) return;
@@ -536,7 +599,9 @@
       }
     }
 
+    if (ENH.hideSun && !cave) coverSun(n, w, h);
     if (ENH.clouds && !cave) drawClouds(day, w, h);
+    if (ENH.heatLightning && !cave) drawHeatLightning(n, w, h);
     if (ENH.night && !cave) drawNight(n, w, h);
     if (ENH.aurora && !cave) drawAurora(n, w, h);
     if (ENH.bokeh && !cave) drawBokeh(n, w, h);
@@ -545,8 +610,9 @@
     if (ENH.birds && !cave) drawBirds(day, w, h, s);
 
     // sun bloom, god-rays and lens flare
-    if (ENH.sun && !cave && day > .15) {
-      const a = day * (1 - rain * .85) * .35, sx = w * .5, sy = HZ * .62;
+    const sd = ss(.45, .85, day);
+    if (ENH.sun && !cave && sd > .02) {
+      const a = sd * (1 - rain * .85) * .35, sx = w * .5, sy = HZ * .62;
       g.globalCompositeOperation = 'lighter';
       const gr = g.createRadialGradient(sx, sy, 0, sx, sy, h * .55);
       gr.addColorStop(0, 'rgba(255,225,160,' + a + ')'); gr.addColorStop(.4, 'rgba(255,190,110,' + a * .3 + ')'); gr.addColorStop(1, 'rgba(255,170,90,0)');
@@ -616,6 +682,8 @@
     }
 
     if (ENH.sparks) drawSparks(nitro, w, h, s);
+    if (ENH.insects && lt > .05 && ENH.lights) drawInsects(lt, w, h, s);
+    if (ENH.pollen && !cave) drawPollen(day, w, h, s);
 
     // raindrops on the lens
     if (ENH.lensRain) {
@@ -633,6 +701,9 @@
     if (ENH.lightning) drawLightning(w, h, s);
 
     // vignette
+    if (ENH.zoomBlur) drawZoomBlur(sp, nitro, w, h);
+    if (ENH.bloom) drawBloom(n, w, h);
+    if (ENH.adapt) drawAdapt(cave, w, h);
     if (ENH.vignette) {
       g.globalCompositeOperation = 'multiply'; g.fillStyle = vig(); g.fillRect(0, 0, w, h);
       if (sp > .6 && state === 'play') { const tg = g.createRadialGradient(w / 2, h * .58, h * .25, w / 2, h * .58, h * .85); tg.addColorStop(0, 'rgba(0,0,0,0)'); tg.addColorStop(1, 'rgba(0,0,0,' + Math.min(.35, (sp - .6) * .4) + ')'); g.fillStyle = tg; g.fillRect(0, 0, w, h) }
